@@ -3,6 +3,8 @@
 ## Project setup
 ```
 npm install
+backend path public/api
+backend worked on localhost:3000
 ```
 
 ### Compiles and hot-reloads for development
@@ -22,3 +24,5 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+
