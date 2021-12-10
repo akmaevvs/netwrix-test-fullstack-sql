@@ -4,7 +4,7 @@
 ```
 npm install
 backend path public/api
-backend worked on localhost:3000
+backend works on localhost:3000
 ```
 
 ### Compiles and hot-reloads for development
