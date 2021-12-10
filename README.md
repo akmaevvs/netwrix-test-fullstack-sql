@@ -3,24 +3,30 @@
 ## Project setup
 ```
 npm install
-backend path public/api
-backend works on localhost:3000
 ```
 
-### Compiles and hot-reloads for development
+### Compiles and hot-reloads for development and launch on local machine
 ```
+backend path public/api
+start local php server on localhost:3000
+
 npm run serve
 ```
 
-### Compiles and minifies for production
+## Vue version
 ```
-npm run build
+Vue CLI 4.5.13
+Vue.js 3.0.0
 ```
 
-### Lints and fixes files
+## Vue presets
 ```
-npm run lint
+Babel
+CSS Pre-poccessors (Sass/SCSS (with node-sass))
+ESLint with error prevention only
+Lint on save
 ```
+
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
