@@ -40,20 +40,60 @@
                     <button
                       v-for="(type, index) in locPartnerTypes"
                       :key="index"
-                      @click="SetSearchType(type)"
+                      @click="this.searchPartnerType = type;"
                       class="types-block__type-button"
                     >{{type}}</button>
                   </div>
                 </transition>
               </button>
               <div class="right-buttons">
-                <button class="button-block__filter-button button-block__filter-button--left">
-                  Country
+                <button
+                  @click.self="showCountries = !showCountries"
+                  class="button-block__filter-button button-block__filter-button--left"
+                >
+                  {{searchCountry}}
                   <img class="button-block__arrow-down" :src="arrowDown" />
+                  <transition name="slide-fade">
+                    <div v-if="showCountries" class="countries-block">
+                      <input type="text" class="countries-search" v-model="searchCountry" />
+                      <div class="types-block types-block--scroll">
+                        <button
+                          @click.self="this.searchCountry = 'Country'; showCountries = false"
+                          class="types-block__type-button"
+                        >Country</button>
+                        <button
+                          v-for="country in filteredCountries"
+                          :key="country.country_id"
+                          @click="this.searchCountry = country.name; showCountries = false"
+                          class="types-block__type-button"
+                        >{{country.name}}</button>
+                      </div>
+                    </div>
+                  </transition>
                 </button>
-                <button class="button-block__filter-button button-block__filter-button--right">
-                  State
+                <button
+                  @click.self="showStates = !showStates"
+                  class="button-block__filter-button button-block__filter-button--right"
+                >
+                  {{searchState}}
                   <img class="button-block__arrow-down" :src="arrowDown" />
+                  <transition name="slide-fade">
+                    <div v-if="showStates" class="countries-block">
+                      <input type="text" class="countries-search" v-model="searchState" />
+                      <div class="types-block types-block--scroll">
+                        <button
+                          @click.self="this.searchState = 'State'; showStates = false"
+                          class="types-block__type-button"
+                        >State</button>
+                        <button
+                          v-for="state in filteredState"
+                          :key="state.state_id"
+                          @click="this.searchState = state.name; showStates = false"
+                          class="types-block__type-button"
+                        >{{state.name}}</button>
+                      </div>
+                    </div>
+                  </transition>
                 </button>
               </div>
             </div>
@@ -113,15 +153,14 @@
           <div class="status-container__content">{{state}}</div>
         </div>
       </transition>
-      <div class="static-status-container"
+      <div
+        class="static-status-container"
         v-if="(locCountry.length == 0 && locState.length == 0 && locPartnerLocator.length == 0) && !loading"
-      >
-        {{state}}
-      </div>
-      <div class="static-status-container" v-else-if="!loading && filteredCompanies.length == 0">
-        {{state}}
-
-      </div>
+      >{{state}}</div>
+      <div
+        class="static-status-container"
+        v-else-if="!loading && filteredCompanies.length == 0"
+      >{{state}}</div>
     </div>
   </div>
 </template>
@@ -159,7 +198,11 @@ export default {
       state: "Please wait ... ",
       searchCompanyAddress: "",
       showTypes: false,
-      loading: false
+      loading: false,
+      showCountries: false,
+      searchCountry: "Country",
+      showStates: false,
+      searchState: "[Nation Wide]"
     };
   },
   watch: {
@@ -167,7 +210,8 @@ export default {
       deep: true,
       handler() {
         if (this.filteredCompanies == 0) {
-          this.state = "Your search parameters did not match any partners. Please try different search."
+          this.state =
+            "Your search parameters did not match any partners. Please try different search.";
         }
       }
     }
@@ -192,7 +236,9 @@ export default {
       ).data;
 
       if (locCountry.error || locState.error || locPartnerLocator.error) {
-        throw new StandartError("Your search parameters did not match any partners. Please try different search.");
+        throw new StandartError(
+          "Your search parameters did not match any partners. Please try different search."
+        );
       } else {
         this.locCountry = locCountry;
         this.locState = locState;
@@ -204,7 +250,8 @@ export default {
       }
       this.loading = false;
     } catch (error) {
-      this.state = "Your search parameters did not match any partners. Please try different search.";
+      this.state =
+        "Your search parameters did not match any partners. Please try different search.";
       setTimeout(() => {
         this.loading = false;
       }, 2000);
@@ -213,6 +260,36 @@ export default {
     }
   },
   computed: {
+    filteredState() {
+      return this.locState.filter(state => {
+        if (this.searchState && this.searchState != "Satate") {
+          if (
+            state.name
+              .toLowerCase()
+              .includes(this.searchState.toLowerCase())
+          ) {
+            return state;
+          }
+        } else {
+          return state;
+        }
+      });
+    },
+    filteredCountries() {
+      return this.locCountry.filter(country => {
+        if (this.searchCountry && this.searchCountry != "Country") {
+          if (
+            country.name
+              .toLowerCase()
+              .includes(this.searchCountry.toLowerCase())
+          ) {
+            return country;
+          }
+        } else {
+          return country;
+        }
+      });
+    },
     filteredCompanies() {
       return this.locPartnerLocator.filter(partner => {
         if (this.searchCompanyAddress) {
@@ -244,16 +321,6 @@ export default {
     // }
   },
   methods: {
-    SetSearchType(type) {
-      this.searchPartnerType = type;
-      console.log(type);
-
-      // this.filteredCompanies = this.locPartnerLocator.filter(partner => {
-      //   if (partner.status.toLowerCase() === type.toLowerCase()) {
-      //     return partner;
-      //   }
-      // });
-    },
     onResize() {
       this.placeholderText =
         window.innerWidth > 767
@@ -441,7 +508,15 @@ input::placeholder {
         color: #fff;
         cursor: pointer;
         font-size: 13px;
-        & .types-block {
+        & .countries-search {
+          height: 30px;
+          margin: 3px;
+          padding: 4px;
+          border: 1px solid #b7bcc1;
+          border-radius: 2px;
+        }
+        & .types-block,
+        .countries-block {
           position: absolute;
           display: flex;
           flex-direction: column;
@@ -452,6 +527,15 @@ input::placeholder {
           width: 100%;
           left: 0;
           z-index: 3;
+
+          &--scroll {
+            position: relative;
+            top: 0;
+            border: none;
+
+            max-height: 300px;
+            overflow-y: scroll;
+          }
 
           &__type-button {
             cursor: pointer;
