@@ -1,22 +1,10 @@
 <template>
   <div class="inner-container">
     <div class="header">
-      <div class="header-logo">
-        <img class="header-logo__img" :src="logo" alt="logo" />
-      </div>
+      <header-logo />
       <div class="header-locator">
         <div class="header-locator__inner">
-          <div class="text-block">
-            <h2 class="text-block__title">Netwrix Partner Locator</h2>
-            <div class="text-block__regular-text-block">
-              <p
-                class="text-block__text"
-              >Hundreds of Netwrix partners around the world are standing by to help you.</p>
-              <p
-                class="text-block__text"
-              >With our Partner Locator you can easily find the list of authorized partners in your area.</p>
-            </div>
-          </div>
+          <text-block />
           <div class="filter-block">
             <div class="search-block">
               <input
@@ -25,7 +13,11 @@
                 type="text"
                 :placeholder="placeholderText"
               />
-              <img class="search-block__search-ico" :src="searchIco" />
+              <img
+                @click="SendQuery"
+                class="search-block__search-ico"
+                :src="searchIco"
+              />
             </div>
             <div class="button-block">
               <button
@@ -33,16 +25,27 @@
                 @click.self="showTypes = !showTypes"
                 @blur="showTypes = false"
               >
-                {{searchPartnerType}}
+                <template v-if="searchPartnerType">
+                  {{ searchPartnerType }}
+                </template>
+                <template v-else> Type </template>
                 <img class="button-block__arrow-down" :src="arrowDown" />
                 <transition name="slide-fade">
                   <div v-if="showTypes" class="types-block">
                     <button
+                      @click="this.searchPartnerType = ''"
+                      class="types-block__type-button"
+                    >
+                      Type
+                    </button>
+                    <button
                       v-for="(type, index) in locPartnerTypes"
                       :key="index"
-                      @click="this.searchPartnerType = type;"
+                      @click="this.searchPartnerType = type; SendQuery()"
                       class="types-block__type-button"
-                    >{{type}}</button>
+                    >
+                      {{ type }}
+                    </button>
                   </div>
                 </transition>
               </button>
@@ -51,22 +54,30 @@
                   @click.self="showCountries = !showCountries"
                   class="button-block__filter-button button-block__filter-button--left"
                 >
-                  {{searchCountry}}
+                  <template v-if="searchCountry">
+                    {{ searchCountry }}
+                  </template>
+                  <template v-else> Country </template>
                   <img class="button-block__arrow-down" :src="arrowDown" />
                   <transition name="slide-fade">
                     <div v-if="showCountries" class="countries-block">
-                      <input type="text" class="countries-search" v-model="searchCountry" />
+                      <input
+                        type="text"
+                        class="countries-search"
+                        v-model="searchCountry"
+                      />
                       <div class="types-block types-block--scroll">
-                        <button
-                          @click.self="this.searchCountry = 'Country'; showCountries = false"
-                          class="types-block__type-button"
-                        >Country</button>
                         <button
                           v-for="country in filteredCountries"
                           :key="country.country_id"
-                          @click="this.searchCountry = country.name; showCountries = false"
+                          @click="
+                            this.searchCountry = country.name;
+                            showCountries = false;
+                          "
                           class="types-block__type-button"
-                        >{{country.name}}</button>
+                        >
+                          {{ country.name }}
+                        </button>
                       </div>
                     </div>
                   </transition>
@@ -75,22 +86,28 @@
                   @click.self="showStates = !showStates"
                   class="button-block__filter-button button-block__filter-button--right"
                 >
-                  {{searchState}}
+                  <template v-if="searchState">{{ searchState }}</template>
+                  <template v-else>State</template>
                   <img class="button-block__arrow-down" :src="arrowDown" />
                   <transition name="slide-fade">
                     <div v-if="showStates" class="countries-block">
-                      <input type="text" class="countries-search" v-model="searchState" />
+                      <input
+                        type="text"
+                        class="countries-search"
+                        v-model="searchState"
+                      />
                       <div class="types-block types-block--scroll">
-                        <button
-                          @click.self="this.searchState = 'State'; showStates = false"
-                          class="types-block__type-button"
-                        >State</button>
                         <button
                           v-for="state in filteredState"
                           :key="state.state_id"
-                          @click="this.searchState = state.name; showStates = false"
+                          @click="
+                            this.searchState = state.name;
+                            showStates = false;
+                          "
                           class="types-block__type-button"
-                        >{{state.name}}</button>
+                        >
+                          {{ state.name }}
+                        </button>
                       </div>
                     </div>
                   </transition>
@@ -104,63 +121,43 @@
     <div class="content">
       <div
         class="content-container"
-        v-if="locCountry.length > 0 && locState.length > 0 && locPartnerLocator.length > 0"
+        v-if="
+          locCountry.length > 0 &&
+          locState.length > 0 &&
+          locPartnerLocator.length > 0
+        "
       >
-        <!-- <div>
-          <div v-for="country in locCountry" :key="country.country_id">{{ country.name }}</div>
-        </div>
-        <div>
-          <div v-for="state in locState" :key="state.state_id">{{ state.name }}</div>
-        </div>-->
         <transition-group name="list-complete">
-          <div
-            class="partner-card"
-            v-for="partnerLocator in filteredCompanies"
-            :key="partnerLocator.country_id"
-          >
-            <div class="left-part">
-              <div class="logo-block">
-                <img class="logo-block__logo" :src="partnerLocator.logo" alt />
-              </div>
-              <div class="info-block">
-                <h4 class="info-block__company">{{partnerLocator.company}}</h4>
-                <p class="info-block__address">{{partnerLocator.address}}</p>
-              </div>
-            </div>
-            <div class="separator-horizontal"></div>
-            <div class="right-part">
-              <div class="contact-block">
-                <a
-                  class="contact-block__website"
-                  :href="partnerLocator.website"
-                  target="_blank"
-                >Website</a>
-                <a
-                  class="contact-block__phone"
-                  :href="`tel:${partnerLocator.phone}`"
-                >{{partnerLocator.phone}}</a>
-              </div>
-              <div class="separator-vertical"></div>
-              <div class="status-block">
-                <p class="status-block__status">{{partnerLocator.status}}</p>
-              </div>
-            </div>
-          </div>
+          <partner-card
+            class="partner-group"
+            v-for="partnerLocator in locPartnerLocator"
+            v-bind:key="partnerLocator.country_id"
+            :partnerLocator="partnerLocator"
+          />
         </transition-group>
       </div>
       <transition name="fade">
         <div v-if="loading" class="status-container">
-          <div class="status-container__content">{{state}}</div>
+          <div class="status-container__content">{{ state }}</div>
         </div>
       </transition>
       <div
         class="static-status-container"
-        v-if="(locCountry.length == 0 && locState.length == 0 && locPartnerLocator.length == 0) && !loading"
-      >{{state}}</div>
+        v-if="
+          locCountry.length == 0 &&
+          locState.length == 0 &&
+          locPartnerLocator.length == 0 &&
+          !loading
+        "
+      >
+        {{ state }}
+      </div>
       <div
         class="static-status-container"
-        v-else-if="!loading && filteredCompanies.length == 0"
-      >{{state}}</div>
+        v-else-if="!loading && this.locPartnerLocator.length == 0"
+      >
+        {{ state }}
+      </div>
     </div>
   </div>
 </template>
@@ -172,17 +169,21 @@ class StandartError extends Error {
     this.name = "StandartError";
   }
 }
-
+import TextBlock from "@/components/TextBlock.vue";
+import HeaderLogo from "@/components/HeaderLogo.vue";
+import PartnerCard from "@/components/PartnerCard.vue";
 import axios from "axios";
-import logo from "@/assets/img/Netwrix_logo_120x25.png";
 import searchIco from "@/assets/img/search-ico.png";
 import arrowDown from "@/assets/img/arrow_down.png";
 export default {
   name: "App",
-  components: {},
+  components: {
+    TextBlock,
+    PartnerCard,
+    HeaderLogo,
+  },
   data() {
     return {
-      logo,
       searchIco,
       placeholderText:
         window.innerWidth > 767
@@ -193,38 +194,28 @@ export default {
       locCountry: [],
       locState: [],
       locPartnerLocator: [],
-      locPartnerTypes: new Set(["Type"]),
-      searchPartnerType: "Type",
+      locPartnerTypes: new Set([]),
+      searchPartnerType: "",
       state: "Please wait ... ",
       searchCompanyAddress: "",
       showTypes: false,
       loading: false,
       showCountries: false,
-      searchCountry: "Country",
+      searchCountry: "",
       showStates: false,
-      searchState: "[Nation Wide]"
+      searchState: "",
     };
   },
-  watch: {
-    filteredCompanies: {
-      deep: true,
-      handler() {
-        if (this.filteredCompanies == 0) {
-          this.state =
-            "Your search parameters did not match any partners. Please try different search.";
-        }
-      }
-    }
-  },
   beforeUnmount() {
-    window.removeEventListener("resize", this.onResize);
+    window.removeEventListener("resize", this.OnResize);
   },
   async mounted() {
-    this.loading = true;
-    this.$nextTick(() => {
-      window.addEventListener("resize", this.onResize);
-    });
     try {
+      this.loading = true;
+      this.$nextTick(() => {
+        window.addEventListener("resize", this.OnResize);
+      });
+      await this.Sleep(2000).then(() => {}); // forced stop for loading effect
       let locCountry = await (
         await axios.get("http://localhost:3000/get_loc_country.php")
       ).data;
@@ -243,30 +234,24 @@ export default {
         this.locCountry = locCountry;
         this.locState = locState;
         this.locPartnerLocator = locPartnerLocator;
-        this.locPartnerLocator.filter(partner => {
+        this.locPartnerLocator.filter((partner) => {
           this.locPartnerTypes.add(partner.status);
         });
-        console.log(this.locPartnerTypes);
       }
       this.loading = false;
     } catch (error) {
-      this.state =
-        "Your search parameters did not match any partners. Please try different search.";
+      this.state = error.message;
       setTimeout(() => {
         this.loading = false;
       }, 2000);
-
-      console.log(error.message);
     }
   },
   computed: {
     filteredState() {
-      return this.locState.filter(state => {
+      return this.locState.filter((state) => {
         if (this.searchState && this.searchState != "Satate") {
           if (
-            state.name
-              .toLowerCase()
-              .includes(this.searchState.toLowerCase())
+            state.name.toLowerCase().includes(this.searchState.toLowerCase())
           ) {
             return state;
           }
@@ -276,7 +261,7 @@ export default {
       });
     },
     filteredCountries() {
-      return this.locCountry.filter(country => {
+      return this.locCountry.filter((country) => {
         if (this.searchCountry && this.searchCountry != "Country") {
           if (
             country.name
@@ -290,48 +275,64 @@ export default {
         }
       });
     },
-    filteredCompanies() {
-      return this.locPartnerLocator.filter(partner => {
-        if (this.searchCompanyAddress) {
-          if (
-            partner.company
-              .toLowerCase()
-              .includes(this.searchCompanyAddress.toLowerCase()) ||
-            partner.address
-              .toLowerCase()
-              .includes(this.searchCompanyAddress.toLowerCase())
-          ) {
-            return partner;
-          }
-        } else if (this.searchPartnerType !== "Type") {
-          if (
-            partner.status
-              .toLowerCase()
-              .includes(this.searchPartnerType.toLowerCase())
-          ) {
-            return partner;
-          }
-        } else {
-          return partner;
-        }
-      });
-    }
-    // filteredTypes() {
-
-    // }
   },
   methods: {
-    onResize() {
+    async SendQuery() {
+      try {
+        if (!this.searchCompanyAddress && !this.searchPartnerType) {
+          this.loading = true;
+
+          throw new StandartError("Empty search input ...");
+        }
+        document.body.style.overflow = "hidden";
+
+        this.state = "Please wait ...";
+
+        this.loading = true;
+
+        const body = {
+          type: this.searchPartnerType,
+          company_address: this.searchCompanyAddress,
+        };
+        let locPartnerLocator = await (
+          await axios.get(
+            `http://localhost:3000/get_partner_locator_with_query.php?type=${body.type}&company_address=${body.company_address}`
+          )
+        ).data;
+        if (locPartnerLocator.error) {
+          throw new StandartError(
+            "Your search parameters did not match any partners. Please try different search."
+          );
+        } else {
+          this.locPartnerLocator = locPartnerLocator;
+          if (this.locPartnerLocator.length == 0) {
+            this.state =
+              "Your search parameters did not match any partners. Please try different search.";
+          }
+          setTimeout(() => {
+            this.loading = false;
+            document.body.style.overflow = "visible";
+          }, 2000);
+        }
+      } catch (error) {
+        document.body.style.overflow = "hidden";
+        this.state = error.message;
+        setTimeout(() => {
+          this.loading = false;
+          document.body.style.overflow = "visible";
+        }, 2000);
+      }
+    },
+    Sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+    OnResize() {
       this.placeholderText =
         window.innerWidth > 767
           ? "Search by company name or adress.."
           : "Search";
     },
-    async test() {
-      let a = await axios.get("http://localhost:3000/get_loc_country.php");
-      console.log(a);
-    }
-  }
+  },
 };
 </script>
 
@@ -355,7 +356,6 @@ export default {
 body {
   position: relative;
   background-color: #f2f2f2;
-  // overflow-x: hidden;
 }
 input,
 button {
@@ -415,11 +415,6 @@ input::placeholder {
   margin-bottom: 80px;
 }
 .header {
-  & .header-logo {
-    background-color: #fff;
-    width: 100%;
-    padding: 32px 120px;
-  }
   & .header-locator {
     background-color: #0973ba;
     color: var(--white-text-color);
@@ -449,6 +444,7 @@ input::placeholder {
         position: absolute;
         right: 13px;
         top: 15px;
+        cursor: pointer;
       }
     }
     & .filter-block {
@@ -459,30 +455,6 @@ input::placeholder {
       align-items: center;
       justify-content: center;
       gap: 20px;
-    }
-
-    & .text-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 21px;
-
-      &__regular-text-block {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-      }
-      &__title {
-        // font-size: 46px;
-        // line-height: 28px;
-      }
-
-      &__text {
-        font-size: 16px;
-        line-height: 32px;
-      }
     }
 
     & .button-block {
@@ -576,6 +548,11 @@ input::placeholder {
     margin: 53px auto;
     position: relative;
   }
+  & .partner-group {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
   & .static-status-container {
     display: flex;
     text-align: center;
@@ -583,7 +560,7 @@ input::placeholder {
     margin-top: 30px;
   }
   & .status-container {
-    position: absolute;
+    position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
@@ -593,6 +570,7 @@ input::placeholder {
     align-items: center;
     font-size: 20px;
     background: rgba(0, 0, 0, 0.301);
+    height: 100vh;
 
     &__content {
       background: #fff;
@@ -608,136 +586,16 @@ input::placeholder {
       padding: 30px;
     }
   }
-  & .partner-card {
-    display: flex;
-    width: 100%;
-    position: relative;
-
-    justify-content: space-between;
-    background-color: #fff;
-    box-shadow: 0px 1px 2px rgba(5, 27, 43, 0.14);
-    // padding: 35px 78px;
-    border-radius: 4px;
-    align-items: center;
-    // gap: 66px;
-
-    & .left-part,
-    .right-part {
-      display: flex;
-      // align-items: center;
-    }
-    & .left-part {
-      flex: 66;
-    }
-
-    & .right-part {
-      flex: 34;
-      display: flex;
-    }
-
-    & .info-block,
-    .contact-block,
-    .status-block,
-    .logo-block {
-      display: flex;
-      flex-direction: column;
-      // justify-content: center;
-    }
-    & .logo-block {
-      // padding: 35px 78px;
-      padding: 5% 11%;
-    }
-    & .info-block {
-      // justify-content: space-between;
-      gap: 14px;
-      &__company {
-        font-size: 21px;
-        line-height: 32px;
-      }
-      &__address {
-        font-size: 14px;
-        line-height: 24px;
-      }
-    }
-    & .contact-block {
-      flex: 40;
-      // padding-right: 5%;
-
-      &__website {
-        color: #0068da;
-        font-size: 14px;
-        line-height: 32px;
-      }
-
-      &__phone {
-        font-size: 13px;
-        line-height: 32px;
-        color: var(--default-text-color);
-        text-decoration: none;
-      }
-    }
-    & .separator-vertical {
-      width: 1px;
-      height: 58px;
-      background-color: #dcdee0;
-    }
-
-    & .status-block {
-      flex: 60;
-      // padding-left: 5%;
-      &__status {
-        font-size: 13px;
-        line-height: 32px;
-        color: #354556;
-      }
-    }
-  }
 }
 
 @media screen and (max-width: 767px) {
-  .header-logo {
-    display: flex;
-    justify-content: center;
-    padding: 32px 0px;
-  }
   .header-locator__inner {
     width: 100%;
     max-width: 288px;
     margin: 0 auto;
     padding: 65px 0px;
   }
-  .partner-card {
-    flex-direction: column;
-    max-width: 270px;
-    padding: 43px 24px;
-    gap: 33px;
-    position: relative;
 
-    & .separator-vertical {
-      display: none;
-    }
-
-    & .left-part {
-      flex-direction: column;
-      gap: 40px;
-      align-self: start;
-
-      & .logo-block {
-        align-self: flex-start;
-        padding: 0;
-      }
-    }
-
-    & .right-part {
-      flex-direction: column;
-      align-items: flex-start;
-      align-self: flex-start;
-    }
-
-    & .status-block {
-      padding-left: 0;
-    }
-  }
   .text-block__title {
     font-style: normal;
     font-weight: bold;
@@ -767,9 +625,6 @@ input::placeholder {
   }
 }
 @media screen and (min-width: 768px) {
-  .separator-horizontal {
-    display: none;
-  }
   .text-block__title {
     font-size: 46px;
     line-height: 28px;
@@ -790,18 +645,6 @@ input::placeholder {
       border-radius: 6px 0px 0px 6px;
       border-right: 1px solid #fff;
     }
-  }
-  .right-part {
-    align-items: center;
-  }
-  .status-block {
-    padding-left: 5%;
-  }
-  .info-block {
-    justify-content: center;
-  }
-  .partner-card {
-    gap: 66px;
   }
 }
 </style>
